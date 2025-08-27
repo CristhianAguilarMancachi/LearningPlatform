@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: ms-reviews
+  config:
+    import: "classpath:application-openapi.yml"
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+
+server:
+  port: 7000
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-exception: true
+
+logging:
+  level:
+    root: INFO
+    com.ucb.plataforma.reviews: DEBUG
