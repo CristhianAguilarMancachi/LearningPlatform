@@ -1,7 +1,7 @@
 springdoc:
   swagger-ui.path: /openapi/swagger-ui.html
   api-docs.path: /openapi/v3/api-docs
-  packagesToScan: bo.edu.ucb.microservices.core.ms_recommendation.controller
+  packagesToScan: com.ucb.plataforma.res.reviews.controller
   pathsToMatch: /**
 
 api:
