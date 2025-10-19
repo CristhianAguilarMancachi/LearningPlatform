@@ -1,5 +1,6 @@
 package com.example.usuarios.service;
 
+import com.example.usuarios.exception.UsuarioNotFoundException;
 import com.example.usuarios.model.Usuario;
 import com.example.usuarios.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,6 @@ public class UsuarioService implements UsuarioServiceImpl {
 
     @Override
     public Usuario crearUsuario(Usuario usuario) {
-        // Validar que el email no exista
-        if (usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new RuntimeException("El email ya está registrado: " + usuario.getEmail());
-        }
         return usuarioRepository.save(usuario);
     }
 
@@ -34,47 +31,33 @@ public class UsuarioService implements UsuarioServiceImpl {
     @Override
     public Usuario obtenerUsuario(Long id) {
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado con id: " + id));
     }
 
     @Override
-    public Usuario actualizarUsuario(Long id, Usuario usuarioDetails) {
-        Usuario usuario = obtenerUsuario(id);
+    public Usuario actualizarUsuario(Long id, Usuario usuario) {
+        Usuario usuarioExistente = obtenerUsuario(id);
         
-        // Validar que el nuevo email no exista (si se está cambiando)
-        if (usuarioDetails.getEmail() != null && 
-            !usuarioDetails.getEmail().equals(usuario.getEmail()) &&
-            usuarioRepository.existsByEmail(usuarioDetails.getEmail())) {
-            throw new RuntimeException("El email ya está registrado: " + usuarioDetails.getEmail());
+        
+        if (usuario.getNombre() != null) {
+            usuarioExistente.setNombre(usuario.getNombre());
+        }
+        if (usuario.getEmail() != null) {
+            usuarioExistente.setEmail(usuario.getEmail());
+        }
+        if (usuario.getPassword() != null) {
+            usuarioExistente.setPassword(usuario.getPassword());
+        }
+        if (usuario.getRol() != null) {
+            usuarioExistente.setRol(usuario.getRol());
         }
 
-        // Actualizar solo los campos que no son nulos
-        if (usuarioDetails.getNombre() != null) {
-            usuario.setNombre(usuarioDetails.getNombre());
-        }
-        if (usuarioDetails.getEmail() != null) {
-            usuario.setEmail(usuarioDetails.getEmail());
-        }
-        if (usuarioDetails.getPassword() != null) {
-            usuario.setPassword(usuarioDetails.getPassword());
-        }
-        if (usuarioDetails.getRol() != null) {
-            usuario.setRol(usuarioDetails.getRol());
-        }
-
-        return usuarioRepository.save(usuario);
+        return usuarioRepository.save(usuarioExistente);
     }
 
     @Override
     public void eliminarUsuario(Long id) {
-        if (!usuarioRepository.existsById(id)) {
-            throw new RuntimeException("Usuario no encontrado con id: " + id);
-        }
-        usuarioRepository.deleteById(id);
-    }
-
-    // Método adicional para verificar existencia por email
-    public boolean existePorEmail(String email) {
-        return usuarioRepository.existsByEmail(email);
+        Usuario usuario = obtenerUsuario(id);
+        usuarioRepository.delete(usuario);
     }
 }

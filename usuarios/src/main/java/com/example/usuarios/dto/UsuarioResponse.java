@@ -27,7 +27,6 @@ public class UsuarioResponse {
         this.rol = rol;
     }
 
-    // Getters y Setters
     public Long getId() {
         return id;
     }
