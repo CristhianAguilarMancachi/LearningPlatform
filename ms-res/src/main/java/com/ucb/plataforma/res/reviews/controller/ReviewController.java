@@ -13,6 +13,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+//import org.springframework.data.domain.Page;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -113,4 +117,47 @@ public class ReviewController {
         LOGGER.info("Deleting review id={}", id);
         reviewService.delete(id);
     }
+
+    
+    // ========================= NUEVOS ENDPOINTS ============================= //
+
+    @Operation(summary = "Filter reviews by minimum rating",
+            description = "Returns all reviews with rating >= minRating")
+    @ApiResponse(responseCode = "200", description = "OK",
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = ReviewResponse.class))))
+    @GetMapping(value = "/filter", produces = "application/json")
+    public List<ReviewResponse> getReviewsByMinRating(
+            @Parameter(description = "Minimum rating (1-5)", required = true, example = "4")
+            @RequestParam int minRating) {
+        LOGGER.info("Filtering reviews with minRating={}", minRating);
+        return reviewService.findByMinRated(minRating);
+    }
+
+    @Operation(summary = "Search reviews by keyword",
+            description = "Searches reviews that contain the given keyword in their comment")
+    @ApiResponse(responseCode = "200", description = "OK",
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = ReviewResponse.class))))
+    @GetMapping(value = "/search", produces = "application/json")
+    public List<ReviewResponse> searchReviews(
+            @Parameter(description = "Keyword to search in comments", example = "excelente")
+            @RequestParam String keyword) {
+        LOGGER.info("Searching reviews with keyword='{}'", keyword);
+        return reviewService.searchByKeyword(keyword);
+    }
+
+    
+    @Operation(summary = "Get all reviews paginated",
+            description = "Returns reviews with pagination support")
+    @ApiResponse(responseCode = "200", description = "OK",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = Page.class)))
+    @GetMapping(value = "/page", produces = "application/json")
+    public Page<ReviewResponse> getAllPaged(@ParameterObject Pageable pageable) {
+        LOGGER.info("Listing reviews with pagination, page={} size={}", pageable.getPageNumber(), pageable.getPageSize());
+        return reviewService.findAllPaged(pageable);
+    }
+
+    
 }

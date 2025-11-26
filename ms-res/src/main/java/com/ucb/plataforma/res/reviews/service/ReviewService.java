@@ -35,7 +35,7 @@ public class ReviewService {
     /**
      * Retorna todas las reseñas de forma paginada.
      */
-    public Page<ReviewResponse> findAll(Pageable pageable) {
+    public Page<ReviewResponse> findAllPaged(Pageable pageable) {
         return reviewRepository.findAll(pageable)
                 .map(reviewMapper::toResponse);
     }
@@ -43,7 +43,7 @@ public class ReviewService {
     /**
      * Retorna reseñas con calificación mínima.
      */
-    public List<ReviewResponse> findHighRated(int minRating) {
+    public List<ReviewResponse> findByMinRated(int minRating) {
         return reviewRepository.findByRatingGreaterThanEqual(minRating)
                 .stream()
                 .map(reviewMapper::toResponse)

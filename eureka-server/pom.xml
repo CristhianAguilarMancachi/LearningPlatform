@@ -13,7 +13,7 @@
 
     <groupId>com.ucb.plataforma</groupId>
     <artifactId>eureka-server</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <name>eureka-server</name>
     <description>Servidor Eureka para registro y descubrimiento de microservicios</description>
 
@@ -41,6 +41,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Cliente de Spring Cloud Config -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+
     </dependencies>
 
     <!-- Gestión de versiones de Spring Cloud -->

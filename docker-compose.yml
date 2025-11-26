@@ -1,6 +1,32 @@
 version: '3.8'
 
 services:
+  # ===============================
+  # CONFIG SERVER
+  # ===============================
+  config-server:
+    build: ./configserver              # 👈 carpeta de tu proyecto config-server
+    container_name: config-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - CONFIG_SERVER_USR=config-usr
+      - CONFIG_SERVER_PWD=SIS313ucb
+      - CONFIG_SERVER_ENCRYPT_KEY=mi-clave-super-secreta-123   # 👈 la que usarás para /encrypt
+      - SPRING_SECURITY_USER_NAME=${CONFIG_SERVER_USR}
+      - SPRING_SECURITY_USER_PASSWORD=${CONFIG_SERVER_PWD}
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -u ${CONFIG_SERVER_USR}:${CONFIG_SERVER_PWD} http://localhost:8888/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - learning-net
+
+  # ===============================
+  # DATABASE - POSTGRES (MS-RES)
+  # ===============================
   postgres_res:
     image: postgres:16-alpine
     container_name: postgres_res
@@ -20,9 +46,20 @@ services:
     networks:
       - learning-net
 
+  # ===============================
+  # EUREKA SERVER
+  # ===============================
   eureka-server:
     build: ./eureka-server
     container_name: eureka
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+    depends_on:
+      config-server:
+        condition: service_healthy
     ports:
       - "8761:8761"
     healthcheck:
@@ -33,38 +70,112 @@ services:
     networks:
       - learning-net
 
+  # ===============================
+  # MICROSERVICIO - REVIEWS
+  # ===============================
   ms-res:
     build: ./ms-res
     container_name: ms-res
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
     depends_on:
+      config-server:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
       postgres_res:
         condition: service_healthy
     ports:
       - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
     networks:
       - learning-net
 
+  # ===============================
+  # API GATEWAY
+  # ===============================
   gateway:
     build: ./gateway
     container_name: gateway
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://keycloak:8080/realms/DemoUCB
+    extra_hosts:
+      - "keycloak.ucb.edu.bo:host-gateway"
     depends_on:
+      config-server:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
       ms-res:
         condition: service_started
+      keycloak:
+        condition: service_started
     ports:
       - "8081:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
     networks:
       - learning-net
 
+  # ===============================
+  # KEYCLOAK DATABASE (Postgres)
+  # ===============================
+  keycloak_postgres:
+    image: postgres:15
+    container_name: keycloak_postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    networks:
+      - learning-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ===============================
+  # KEYCLOAK SERVER
+  # ===============================
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.1
+    container_name: keycloak
+    command: start-dev
+    ports:
+      - "8082:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak_postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+    depends_on:
+      keycloak_postgres:
+        condition: service_healthy
+    networks:
+      - learning-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+# ===============================
+# VOLUMES & NETWORKS
+# ===============================
 volumes:
   pgdata_res:
+  keycloak_data:
 
 networks:
   learning-net:
