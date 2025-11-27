@@ -9,9 +9,9 @@ services:
     container_name: config-server
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - CONFIG_SERVER_USR=config-usr
-      - CONFIG_SERVER_PWD=SIS313ucb
-      - CONFIG_SERVER_ENCRYPT_KEY=mi-clave-super-secreta-123   # 👈 la que usarás para /encrypt
+      - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
+      - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
+      - CONFIG_SERVER_ENCRYPT_KEY=${CONFIG_SERVER_ENCRYPT_KEY}
       - SPRING_SECURITY_USER_NAME=${CONFIG_SERVER_USR}
       - SPRING_SECURITY_USER_PASSWORD=${CONFIG_SERVER_PWD}
     ports:
@@ -104,7 +104,8 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
       - CONFIG_SERVER_USR=${CONFIG_SERVER_USR}
       - CONFIG_SERVER_PWD=${CONFIG_SERVER_PWD}
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER-URI=http://keycloak:8080/realms/DemoUCB
+      # 👇 corregido: antes tenía ISSUER-URI (con guion) y Spring no lo lee
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/DemoUCB
     extra_hosts:
       - "keycloak.ucb.edu.bo:host-gateway"
     depends_on:

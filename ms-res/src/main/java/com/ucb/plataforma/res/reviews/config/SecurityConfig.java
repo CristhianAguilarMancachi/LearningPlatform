@@ -13,6 +13,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
@@ -31,11 +32,8 @@ public class SecurityConfig {
                     "/v3/api-docs/**"
                 ).permitAll()
 
-                // protegidos
-                .pathMatchers(HttpMethod.GET, "/reviews/**").hasAuthority("ROLE_REVIEWS_READ")
-                .pathMatchers(HttpMethod.POST, "/reviews/**").hasAuthority("ROLE_REVIEWS_WRITE")
-                .pathMatchers(HttpMethod.PUT, "/reviews/**").hasAuthority("ROLE_REVIEWS_WRITE")
-                .pathMatchers(HttpMethod.DELETE, "/reviews/**").hasAuthority("ROLE_REVIEWS_WRITE")
+                // protegidos: cualquier método en /reviews/** requiere ROLE_USER
+                .pathMatchers("/reviews/**").hasAuthority("ROLE_USER")
 
                 .anyExchange().authenticated()
             )
@@ -55,33 +53,36 @@ public class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             List<GrantedAuthority> authorities = new ArrayList<>();
 
-            // realm roles
+            // 1) Roles de realm: realm_access.roles
             Object realmAccessObj = jwt.getClaims().get("realm_access");
             if (realmAccessObj instanceof Map<?, ?> realmAccess) {
                 Object rolesObj = realmAccess.get("roles");
                 if (rolesObj instanceof Collection<?> roles) {
                     authorities.addAll(
                         roles.stream()
-                             .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                             // OJO: ya NO agregamos "ROLE_" delante,
+                             // el rol en el token debe venir como "ROLE_USER"
+                             .map(role -> new SimpleGrantedAuthority(role.toString()))
                              .collect(Collectors.toList())
                     );
                 }
             }
 
-            // client roles del cliente ms-res-client
+            // 2) Roles de TODOS los clients: resource_access.<clientId>.roles
             Object resourceAccessObj = jwt.getClaims().get("resource_access");
             if (resourceAccessObj instanceof Map<?, ?> resourceAccess) {
-                Object clientAccessObj = resourceAccess.get("ms-res-client");
-                if (clientAccessObj instanceof Map<?, ?> clientAccess) {
-                    Object clientRolesObj = clientAccess.get("roles");
-                    if (clientRolesObj instanceof Collection<?> roles) {
-                        authorities.addAll(
-                            roles.stream()
-                                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                                 .collect(Collectors.toList())
-                        );
+                resourceAccess.forEach((clientId, clientAccessObj) -> {
+                    if (clientAccessObj instanceof Map<?, ?> clientAccess) {
+                        Object clientRolesObj = clientAccess.get("roles");
+                        if (clientRolesObj instanceof Collection<?> roles) {
+                            authorities.addAll(
+                                roles.stream()
+                                     .map(role -> new SimpleGrantedAuthority(role.toString()))
+                                     .collect(Collectors.toList())
+                            );
+                        }
                     }
-                }
+                });
             }
 
             return authorities;
