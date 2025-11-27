@@ -6,5 +6,5 @@ export const environment = {
     clientId: 'lp-web',
     url: 'http://localhost:8082',
   },
-  apiUrl: '/ms-res-reviews'
+  apiUrl: '/ms-res'
 };

@@ -4,7 +4,7 @@ WORKDIR /workspace
 
 # Copiar el proyecto y construir el jar
 COPY . .
-RUN ./mvnw clean package -DskipTests || mvn clean package -DskipTests
+#RUN ./mvnw clean package -DskipTests || mvn clean package -DskipTests
 
 # Extraer las capas del JAR
 RUN java -Djarmode=layertools -jar target/*.jar extract --destination extracted

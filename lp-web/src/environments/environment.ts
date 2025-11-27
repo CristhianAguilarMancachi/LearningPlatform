@@ -7,5 +7,5 @@ export const environment = {
     url: 'http://localhost:8082',   // tu Keycloak en docker
   },
   // Base de tu backend (irá por proxy)
-  apiUrl: '/ms-res-reviews'
+  apiUrl: '/ms-res'
 };

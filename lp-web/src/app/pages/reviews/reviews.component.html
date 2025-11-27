@@ -1,4 +1,122 @@
+<!-- src/app/pages/reviews/reviews.component.html -->
 <div class="reviews-page">
-  <h2>LP Web – Reviews</h2>
-  <p>Estás autenticado en Keycloak. Aquí luego irá el formulario de reseñas.</p>
+
+  <header class="header">
+    <h2>Reseñas de cursos</h2>
+    <button type="button" class="btn btn-danger" (click)="logout()">Logout</button>
+  </header>
+
+  <!-- Estado de carga -->
+  <p *ngIf="loading">Cargando reseñas...</p>
+
+  <!-- Listado de reviews -->
+  <section class="reviews-list" *ngIf="!loading">
+    <h3>Listado de reseñas</h3>
+
+    <p *ngIf="reviews.length === 0">
+      No hay reseñas registradas todavía.
+    </p>
+
+    <table *ngIf="reviews.length > 0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Course ID</th>
+          <th>User ID</th>
+          <th>Rating</th>
+          <th>Título</th>
+          <th>Comentario</th>
+          <th>Creado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of reviews">
+          <td>{{ r.id }}</td>
+          <td>{{ r.courseId }}</td>
+          <td>{{ r.userId ?? '-' }}</td>
+          <td>{{ r.rating }}</td>
+          <td>{{ r.title || '-' }}</td>
+          <td>{{ r.comment }}</td>
+          <td>{{ r.createdAt | date:'short' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary mt-1" (click)="loadReviews()">
+      Recargar reseñas
+    </button>
+  </section>
+
+  <hr />
+
+  <!-- Formulario para crear review -->
+  <section class="review-form">
+    <h3>Crear nueva reseña</h3>
+
+    <form #reviewForm="ngForm" (ngSubmit)="submitReview(reviewForm)">
+
+      <div class="form-row">
+        <label for="courseId">Course ID *</label>
+        <input
+          id="courseId"
+          name="courseId"
+          type="number"
+          required
+          [(ngModel)]="form.courseId"
+        />
+      </div>
+
+      <div class="form-row">
+        <label for="userId">User ID (opcional)</label>
+        <input
+          id="userId"
+          name="userId"
+          type="number"
+          [(ngModel)]="form.userId"
+        />
+      </div>
+
+      <div class="form-row">
+        <label for="rating">Rating (1-5) *</label>
+        <input
+          id="rating"
+          name="rating"
+          type="number"
+          min="1"
+          max="5"
+          required
+          [(ngModel)]="form.rating"
+        />
+      </div>
+
+      <div class="form-row">
+        <label for="title">Título (opcional)</label>
+        <input
+          id="title"
+          name="title"
+          type="text"
+          maxlength="150"
+          [(ngModel)]="form.title"
+        />
+      </div>
+
+      <div class="form-row">
+        <label for="comment">Comentario *</label>
+        <textarea
+          id="comment"
+          name="comment"
+          rows="4"
+          maxlength="2000"
+          required
+          [(ngModel)]="form.comment"
+        ></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-success">
+          Guardar reseña
+        </button>
+      </div>
+    </form>
+  </section>
 </div>

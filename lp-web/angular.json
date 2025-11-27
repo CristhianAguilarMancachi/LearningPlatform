@@ -68,15 +68,15 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "lp-web:build:development",   
-            "proxyConfig": "proxy.conf.json"               
+            "proxyConfig": "proxy.conf.json",
+            "buildTarget": "lp-web:build:development"
           },
           "configurations": {
             "production": {
-              "browserTarget": "lp-web:build:production"
+              "buildTarget": "lp-web:build:production"
             },
             "development": {
-              "browserTarget": "lp-web:build:development"
+              "buildTarget": "lp-web:build:development"
             }
           },
           "defaultConfiguration": "development"

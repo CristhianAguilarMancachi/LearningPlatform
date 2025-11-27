@@ -6,7 +6,7 @@ WORKDIR /workspace
 COPY . .
 
 # Ejecutar Maven dentro del contenedor para generar el .jar
-RUN ./mvnw clean package -DskipTests || mvn clean package -DskipTests
+#RUN ./mvnw clean package -DskipTests || mvn clean package -DskipTests
 
 # ========== FASE FINAL ==========
 FROM eclipse-temurin:17-jre-alpine
